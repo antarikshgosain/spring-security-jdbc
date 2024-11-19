@@ -2,6 +2,7 @@ package dev.anta.secure_jdbc.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
@@ -41,6 +42,16 @@ public class SecurityConfig {
         );
     }*/
 
+    /* Important Information
+        // DDL Path Variable: JdbcDaoImpl.DEFAULT_USER_SCHEMA_DDL_LOCATION
+        // DDL File Location: org/springframework/security/core/userdetails/jdbc/users.ddl
+        // Modified Script:
+            create table users(username varchar(50) not null primary key,password varchar(500) not null,enabled boolean not null);
+            create table authorities (username varchar(50) not null,authority varchar(50) not null,constraint fk_authorities_users foreign key(username) references users(username));
+            create unique index ix_auth_username on authorities (username,authority);
+    */
+
+    /* //Works well for H2 In-Memory Database
     @Bean
     EmbeddedDatabase dataSource() {
         return new EmbeddedDatabaseBuilder()
@@ -48,18 +59,30 @@ public class SecurityConfig {
                 .setName("dashingboard")
                 .addScript(JdbcDaoImpl.DEFAULT_USER_SCHEMA_DDL_LOCATION)
                 .build();
-    }
-
+    }*/
 
     @Bean
-    JdbcUserDetailsManager user(DataSource dataSource, PasswordEncoder passwordEncoder) {
-        UserDetails superAdmin = User.builder()
-                .username("superadmin")
-                .password(passwordEncoder.encode("superadmin01"))
-                .roles("ADMIN")
-                .build();
-        JdbcUserDetailsManager jdbcUserDetailsManager = new JdbcUserDetailsManager(dataSource);
-        jdbcUserDetailsManager.createUser(superAdmin);
+    public DataSource datasource(){
+        DriverManagerDataSource dataSource = new DriverManagerDataSource();
+        dataSource.setDriverClassName("org.postgresql.Driver");
+        dataSource.setUrl("jdbc:postgresql://URL:PORT/DB_NAME");
+        dataSource.setUsername("USERNAME");
+        dataSource.setPassword("PASSWORD");
+        return dataSource;
+    }
+
+    @Bean
+    JdbcUserDetailsManager user(DataSource datasource, PasswordEncoder passwordEncoder) {
+        JdbcUserDetailsManager jdbcUserDetailsManager = new JdbcUserDetailsManager(datasource);
+        //if user is to be created, whole create table script is also called
+        if(!jdbcUserDetailsManager.userExists("superadmin")){
+            UserDetails superAdmin = User.builder()
+                    .username("superadmin")
+                    .password(passwordEncoder.encode("superadmin01"))
+                    .roles("ADMIN")
+                    .build();
+            jdbcUserDetailsManager.createUser(superAdmin);
+        }
         return jdbcUserDetailsManager;
     }
 
