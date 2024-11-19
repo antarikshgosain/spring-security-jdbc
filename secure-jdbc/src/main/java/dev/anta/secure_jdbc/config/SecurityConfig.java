@@ -12,6 +12,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
@@ -50,15 +52,20 @@ public class SecurityConfig {
 
 
     @Bean
-    JdbcUserDetailsManager user(DataSource dataSource) {
+    JdbcUserDetailsManager user(DataSource dataSource, PasswordEncoder passwordEncoder) {
         UserDetails superAdmin = User.builder()
                 .username("superadmin")
-                .password("superadmin01")
+                .password(passwordEncoder.encode("superadmin01"))
                 .roles("ADMIN")
                 .build();
         JdbcUserDetailsManager jdbcUserDetailsManager = new JdbcUserDetailsManager(dataSource);
         jdbcUserDetailsManager.createUser(superAdmin);
         return jdbcUserDetailsManager;
+    }
+
+    @Bean
+    PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 
 
