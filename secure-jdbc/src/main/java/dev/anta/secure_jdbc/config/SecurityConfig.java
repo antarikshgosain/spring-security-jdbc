@@ -10,6 +10,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
@@ -50,7 +51,13 @@ public class SecurityConfig {
 
     @Bean
     JdbcUserDetailsManager user(DataSource dataSource) {
+        UserDetails superAdmin = User.builder()
+                .username("superadmin")
+                .password("superadmin01")
+                .roles("ADMIN")
+                .build();
         JdbcUserDetailsManager jdbcUserDetailsManager = new JdbcUserDetailsManager(dataSource);
+        jdbcUserDetailsManager.createUser(superAdmin);
         return jdbcUserDetailsManager;
     }
 
