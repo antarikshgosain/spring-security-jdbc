@@ -1,5 +1,6 @@
 package dev.anta.secure_jdbc.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -17,6 +18,7 @@ public class HomeController {
     }
 
     @GetMapping(value = "/admin")
+    @PreAuthorize("hasRole('ADMIN')")
     public String admin() {
         return "Welcome Respected Admin";
     }
